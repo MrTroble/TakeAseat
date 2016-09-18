@@ -35,16 +35,16 @@ public class Main extends Application{
     public static ArrayList<String> exlist = new ArrayList<String>(); 
 	private Group root = new Group();
 	private Button creatplane;
+	private static String[] argss;
 	
 	public static void main(String[] args) {
+		argss = args;
 		launch(args);
 	}
 	
 	@Override
 	public void start(Stage stage) throws Exception {
-		
-		initStage(stage);
-		
+		if(initStage(stage) != 0)return;
 		Scene sc = new Scene(root);
 		sc.setOnKeyPressed(new EventHandler<KeyEvent>() {
 
@@ -63,7 +63,20 @@ public class Main extends Application{
         stage.show();
 	}
 
-	private void initStage(final Stage st){
+	private int initStage(final Stage st){
+		if(argss.length > 0){
+			File fl = new File(argss[0]);
+			if(fl.exists()){
+				try {
+					initData(fl);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				initPlane();
+				st.close();
+				return 1;
+			}
+		}
 		GridPane pane = new GridPane();
 		pane.setVgap(10D);
 		pane.setHgap(10D);	
@@ -82,6 +95,7 @@ public class Main extends Application{
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
+				creatplane.setDisable(false);
 			}
 		});
 		pane.add(btn, 0, 0);
@@ -131,6 +145,7 @@ public class Main extends Application{
 		pane.add(creatplane, 1, 1);
 		
 		root.getChildren().add(pane);
+		return 0;
 	}
 	
 	private void buttonSettings(Labeled btn ,Color cl,double inst,double radii){
@@ -256,7 +271,6 @@ public class Main extends Application{
 			bannlist.add(new BanndPaare(str[0], str[1]));
 		}
 		sc.close();
-		creatplane.setDisable(false);
 		this.fl = fl;
 	}
 	
@@ -302,6 +316,25 @@ public class Main extends Application{
 	    pick.setTranslateX(100);
 		gr.getChildren().add(pick);
 	  
+		Button lab = new Button("by MrTroble");
+		buttonSettings(lab, Color.GRAY, 0, 5);
+		lab.setTranslateX(400);
+		lab.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Desktop.getDesktop().browse(new URI("https://github.com/MrTroble"));
+				} catch (Exception e) {
+					Alert al = new Alert(AlertType.ERROR);
+					al.setHeaderText(e.toString());
+					al.setContentText(e.getMessage());
+					al.showAndWait();
+				}
+			}
+		});
+		gr.getChildren().add(lab);
+		
 		ClassPlane plan = new ClassPlane();
 		plan.setVgap(10);
 		plan.setHgap(10);
