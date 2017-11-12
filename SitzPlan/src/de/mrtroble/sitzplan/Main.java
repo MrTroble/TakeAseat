@@ -30,9 +30,9 @@ import javafx.util.StringConverter;
 public class Main extends Application{
 
 	public static ArrayList<String> datenbank = new ArrayList<String>(); 
-    public static ArrayList<ClassM8> plane = new ArrayList<ClassM8>(); 
+    public static HashMap<Integer, String> plane = new HashMap<>(); 
     public static ArrayList<BanndPaare> bannlist = new ArrayList<BanndPaare>();
-    public static ArrayList<String> exlist = new ArrayList<String>(); 
+    
 	private Group root = new Group();
 	private Button creatplane;
 	private static String[] argss;
@@ -253,18 +253,14 @@ public class Main extends Application{
 			}
 		});
 	}
+	
 	private void initData(File fl) throws FileNotFoundException {
 		if(fl == null)return;
 		Scanner sc = new Scanner(fl);
 		while(sc.hasNextLine()){
 			String str = sc.nextLine();
-			if(str.equals("<EXCEPTION>"))break;
-			datenbank.add(str);
-		}
-		while(sc.hasNextLine()){
-			String str = sc.nextLine();
 			if(str.equals("<BANNLIST>"))break;
-			exlist.add(str);
+			datenbank.add(str);
 		}
 		while(sc.hasNextLine()){
 			String[] str = sc.nextLine().split(":");
@@ -279,12 +275,11 @@ public class Main extends Application{
 	private void initPlane() {
 		plane.clear();
 		for(String name : datenbank){
-			ClassM8 clasM = new ClassM8(name, getRandomPlace(name)); 
-			plane.add(clasM);
+			plane.put(getRandomPlace(name), name);
 		}
-		for(ClassM8 m8 : plane){
-			System.out.println(m8);
-		}
+		plane.forEach((id, name) -> {
+			System.out.println(name);
+		});
 		
 		Stage second = new Stage(StageStyle.UNIFIED);	
 		
@@ -365,15 +360,11 @@ public class Main extends Application{
 		for(Node n : plan.getChildren()){
 			if(n instanceof SitzBank){
 				SitzBank ban = (SitzBank) n;
-				bannlist.add(new BanndPaare(ban.getNachbar1().getName(), ban.getNachbar2().getName()));
+				bannlist.add(new BanndPaare(ban.getNachbar1(), ban.getNachbar2()));
 			}
 		}
 		ArrayList<String> file = new ArrayList<String>();
 		for (String string : datenbank) {
-			file.add(string);
-		}
-		file.add("<EXCEPTION>");
-		for (String string : exlist) {
 			file.add(string);
 		}
 		file.add("<BANNLIST>");
@@ -395,29 +386,28 @@ public class Main extends Application{
 		
 	}
 
-	private short getRandomPlace(String m){
+	private int getRandomPlace(String m){
 		int place = new Random().nextInt(datenbank.size());
 		try{
-		for(ClassM8 md : plane){
-			if(md.getPlace() == place){
-				return getRandomPlace(m);
-			}
+		for(Map.Entry<Integer, String> entry : plane.entrySet()) {
+			if(entry.getKey() == place)return getRandomPlace(m);
 		}
-		if(place%2 == 0){
-			ClassM8 m8 = getM8((short) (place - 1));
+		System.out.println(place % 2);
+		if(place % 2 == 0){
+			String m8 = getM8((short) (place - 1));
 			if(m8 != null){
 				for (BanndPaare ban : bannlist) {
-					if(ban.isBanned(m8.getName(), m)){
+					if(ban.isBanned(m8, m)){
 						System.out.println(ban);
 						return getRandomPlace(m);
 					}
 				}
 			}
 		}else{
-			ClassM8 m8 = getM8((short) (place - 1));
+			String m8 = getM8((short) (place - 1));
 			if(m8 != null){
 				for (BanndPaare ban : bannlist) {
-					if(ban.isBanned(m8.getName(), m)){
+					if(ban.isBanned(m8, m)){
 						System.out.println(ban);
 						return getRandomPlace(m);
 					}
@@ -440,13 +430,8 @@ public class Main extends Application{
 		
 	}
 	
-	public static ClassM8 getM8(short zahl){
-		for(ClassM8 m9 : plane){
-			if(m9.getPlace() == zahl){
-				return m9;
-			}
-		}
-		return null;
+	public static String getM8(int zahl){
+		return plane.get(zahl);
 	}
 	
 	@FXML
